@@ -6,6 +6,11 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# A terminal opened before Azure CLI was installed does not have it on PATH yet.
+for d in "/c/Program Files/Microsoft SDKs/Azure/CLI2/wbin" "/c/Program Files (x86)/Microsoft SDKs/Azure/CLI2/wbin"; do
+  if [ -d "$d" ]; then PATH="$PATH:$d"; fi
+done
+
 info="deploy/azure/.deploy-info.txt"
 if [ ! -f "$info" ]; then
   echo "No $info - run the first deploy with deploy/azure/deploy.ps1 (see deploy/azure/README.md)." >&2

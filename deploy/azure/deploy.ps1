@@ -116,7 +116,11 @@ Write-Host "Packing and uploading sources ..." -ForegroundColor Cyan
 $tmp = Join-Path ([IO.Path]::GetTempPath()) "finder-deploy-$PID"
 New-Item -ItemType Directory -Force $tmp | Out-Null
 $archive = Join-Path $tmp "src.tgz"
-& tar.exe -czf $archive -C $repoRoot `
+# The tar that ships with Windows, by full path: started from Git Bash, PATH finds GNU tar first,
+# and that one reads "C:\..." as a remote host.
+$tarExe = Join-Path $env:SystemRoot "System32\tar.exe"
+if (-not (Test-Path $tarExe)) { $tarExe = "tar.exe" }
+& $tarExe -czf $archive -C $repoRoot `
     --exclude=node_modules --exclude=.venv --exclude=__pycache__ --exclude=.pytest_cache `
     --exclude=./data --exclude=./frontend/dist --exclude=./.git --exclude=./.claude `
     --exclude=./deploy --exclude=./hermes-plugins --exclude=./backend/tests --exclude=./backend/.env .
