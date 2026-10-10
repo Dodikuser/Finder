@@ -1,0 +1,11 @@
+node_modules/
+.venv/
+__pycache__/
+frontend/dist/
+data/
+backend/.env
+*.log
+deploy/azure/.deploy-info.txt
+.pytest_cache/
+.claude/
+*.tgz

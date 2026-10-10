@@ -1,0 +1,190 @@
+@import "tailwindcss";
+
+/* Mint palette from the design canvas. Semantic tokens switch for dark mode below. */
+@theme {
+  --font-sans: "Onest", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-ground: var(--c-ground);
+  --color-surface: var(--c-surface);
+  --color-soft: var(--c-soft);
+  --color-tint: var(--c-tint);
+  --color-line: var(--c-line);
+  --color-line-strong: var(--c-line-strong);
+  --color-ink: var(--c-ink);
+  --color-ink-2: var(--c-ink-2);
+  --color-muted: var(--c-muted);
+  --color-brand: var(--c-brand);
+  --color-brand-ink: var(--c-brand-ink);
+  --color-brand-deep: var(--c-brand-deep);
+  --color-on-brand: #ffffff;
+  --color-night: var(--c-night);
+  --color-night-2: var(--c-night-2);
+  --color-night-ink: var(--c-night-ink);
+  --color-night-muted: var(--c-night-muted);
+  --color-glow: var(--c-glow);
+  --color-amber-bg: var(--c-amber-bg);
+  --color-amber-chip: var(--c-amber-chip);
+  --color-amber-ink: var(--c-amber-ink);
+  --color-amber-dot: var(--c-amber-dot);
+  --color-slate-bg: var(--c-slate-bg);
+  --color-slate-ink: var(--c-slate-ink);
+  --color-slate-dot: var(--c-slate-dot);
+  --color-danger-bg: var(--c-danger-bg);
+  --color-danger-ink: var(--c-danger-ink);
+
+  --animate-rise: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-pulse-ring: pulse-ring 1.8s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes pulse-ring {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(17, 134, 106, 0.45); }
+    50% { box-shadow: 0 0 0 7px rgba(17, 134, 106, 0); }
+  }
+  @keyframes shimmer {
+    from { background-position: -200px 0; }
+    to { background-position: 200px 0; }
+  }
+}
+
+:root {
+  --c-ground: #f3faf7;
+  --c-surface: #ffffff;
+  --c-soft: #e8f7f0;
+  --c-tint: #cff1e3;
+  --c-line: #d5ede3;
+  --c-line-strong: #9fd9c2;
+  --c-ink: #0e2621;
+  --c-ink-2: #2e4a43;
+  --c-muted: #4d6a62;
+  --c-brand: #11866a;
+  --c-brand-ink: #0b6e55;
+  --c-brand-deep: #08513f;
+  --c-night: #0e2621;
+  --c-night-2: #173b33;
+  --c-night-ink: #e8f7f0;
+  --c-night-muted: #a9cfc2;
+  --c-glow: #7fdab6;
+  --c-amber-bg: #fff5e6;
+  --c-amber-chip: #ffe7c2;
+  --c-amber-ink: #7a4a00;
+  --c-amber-dot: #c77700;
+  --c-slate-bg: #eef1f0;
+  --c-slate-ink: #3a4744;
+  --c-slate-dot: #5b6b67;
+  --c-danger-bg: #fbedef;
+  --c-danger-ink: #8a2f3e;
+  /* Chart series, fixed order. Validated (scripts/validate_palette.js of the dataviz method) on this
+     surface for colour-vision-deficiency separation; three light slots are below 3:1 contrast, which
+     is why every chart ships a table view. */
+  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100;
+  --series-5: #e87ba4; --series-6: #008300; --series-7: #4a3aa7; --series-8: #e34948;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --c-ground: #0b1714;
+    --c-surface: #10201c;
+    --c-soft: #142b25;
+    --c-tint: #1b3d34;
+    --c-line: #1f3a33;
+    --c-line-strong: #2d5a4e;
+    --c-ink: #e3f4ed;
+    --c-ink-2: #c3ddd4;
+    --c-muted: #93b3a9;
+    --c-brand: #1fa582;
+    --c-brand-ink: #7fdab6;
+    --c-brand-deep: #a6ead0;
+    --c-night: #06110e;
+    --c-night-2: #12302a;
+    --c-amber-bg: #2a2010;
+    --c-amber-chip: #3d2c0c;
+    --c-amber-ink: #f3c77a;
+    --c-amber-dot: #e09a2a;
+    --c-slate-bg: #172220;
+    --c-slate-ink: #c2cfcb;
+    --c-slate-dot: #8a9b97;
+    --c-danger-bg: #3a1a20;
+    --c-danger-ink: #f1a5b2;
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
+    --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --c-ground: #0b1714;
+  --c-surface: #10201c;
+  --c-soft: #142b25;
+  --c-tint: #1b3d34;
+  --c-line: #1f3a33;
+  --c-line-strong: #2d5a4e;
+  --c-ink: #e3f4ed;
+  --c-ink-2: #c3ddd4;
+  --c-muted: #93b3a9;
+  --c-brand: #1fa582;
+  --c-brand-ink: #7fdab6;
+  --c-brand-deep: #a6ead0;
+  --c-night: #06110e;
+  --c-night-2: #12302a;
+  --c-amber-bg: #2a2010;
+  --c-amber-chip: #3d2c0c;
+  --c-amber-ink: #f3c77a;
+  --c-amber-dot: #e09a2a;
+  --c-slate-bg: #172220;
+  --c-slate-ink: #c2cfcb;
+  --c-slate-dot: #8a9b97;
+  --c-danger-bg: #3a1a20;
+  --c-danger-ink: #f1a5b2;
+  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
+  --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
+  color-scheme: dark;
+}
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--c-ground);
+  color: var(--c-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+/* In the base layer so utility classes on a link (e.g. a button-styled <a>) win over these defaults. */
+@layer base {
+  a { color: var(--c-brand-ink); }
+  a:hover { color: var(--c-brand-deep); }
+}
+::selection { background: var(--c-tint); }
+:focus-visible { outline: 2px solid var(--c-brand); outline-offset: 2px; border-radius: 8px; }
+
+.shimmer {
+  background: linear-gradient(90deg, var(--c-soft) 0, var(--c-tint) 50%, var(--c-soft) 100%);
+  background-size: 400px 100%;
+  animation: var(--animate-shimmer);
+}
+
+/* Agent answers (markdown) */
+.prose-finder { line-height: 1.65; font-size: 15px; overflow-wrap: anywhere; }
+.prose-finder > * + * { margin-top: 0.7em; }
+.prose-finder h1, .prose-finder h2, .prose-finder h3 { font-weight: 700; line-height: 1.3; margin-top: 1.1em; }
+.prose-finder h1 { font-size: 1.25rem; } .prose-finder h2 { font-size: 1.12rem; } .prose-finder h3 { font-size: 1rem; }
+.prose-finder ul { list-style: disc; padding-left: 1.3em; }
+.prose-finder ol { list-style: decimal; padding-left: 1.3em; }
+.prose-finder li + li { margin-top: 0.25em; }
+.prose-finder code { font-family: var(--font-mono); font-size: 0.86em; background: var(--c-soft); padding: 0.1em 0.35em; border-radius: 6px; }
+.prose-finder pre { background: var(--c-night); color: var(--c-night-ink); padding: 14px; border-radius: 14px; overflow-x: auto; }
+.prose-finder pre code { background: none; padding: 0; }
+.prose-finder blockquote { border-left: 3px solid var(--c-line-strong); padding-left: 12px; color: var(--c-muted); }
+.prose-finder table { width: 100%; border-collapse: collapse; font-size: 14px; display: block; overflow-x: auto; }
+.prose-finder th, .prose-finder td { border: 1px solid var(--c-line); padding: 6px 10px; text-align: left; vertical-align: top; }
+.prose-finder th { background: var(--c-soft); font-weight: 600; }
+.prose-finder a { text-decoration: underline; text-underline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

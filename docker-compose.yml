@@ -1,0 +1,20 @@
+services:
+  finder:
+    build: .
+    image: finder:latest
+    init: true                     # reaps hermes/MCP child processes
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # FINDER_SECRET_KEY: set a long random string in production (otherwise generated into the volume)
+      FINDER_SECRET_KEY: ${FINDER_SECRET_KEY:-}
+      FINDER_COOKIE_SECURE: ${FINDER_COOKIE_SECURE:-false}
+      FINDER_ALLOW_REGISTRATION: ${FINDER_ALLOW_REGISTRATION:-true}
+      FINDER_PROXY_URL: ${FINDER_PROXY_URL:-}         # optional outbound proxy for search tools
+      FINDER_CONTACT_EMAIL: ${FINDER_CONTACT_EMAIL:-} # polite-pool email for NCBI / OpenAlex
+    volumes:
+      - finder-data:/opt/data
+
+volumes:
+  finder-data:

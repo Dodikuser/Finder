@@ -1,0 +1,107 @@
+#cloud-config
+# First boot of the Finder VM: Docker, the Compose stack definition and helper scripts.
+# The image is built here from /opt/finder/src, which deploy.ps1 uploads over SSH.
+# __SITE_HOST__ is filled in by main.bicep.
+package_update: true
+packages:
+  - ca-certificates
+  - curl
+  - gnupg
+
+write_files:
+  - path: /opt/finder/docker-compose.yml
+    permissions: "0644"
+    content: |
+      services:
+        finder:
+          build: ./src
+          image: finder:local
+          init: true                 # reaps Hermes / MCP / Chrome child processes
+          restart: unless-stopped
+          env_file: .env
+          environment:
+            FINDER_COOKIE_SECURE: "true"
+          expose:
+            - "8000"                 # reachable only through Caddy, never published
+          volumes:
+            - finder-data:/opt/data
+          stop_grace_period: 30s
+        caddy:
+          image: caddy:2.8-alpine
+          restart: unless-stopped
+          ports:
+            - "80:80"
+            - "443:443"
+            - "443:443/udp"
+          volumes:
+            - ./Caddyfile:/etc/caddy/Caddyfile:ro
+            - caddy-data:/data
+            - caddy-config:/config
+          depends_on:
+            - finder
+      volumes:
+        finder-data:
+        caddy-data:
+        caddy-config:
+
+  - path: /opt/finder/Caddyfile
+    permissions: "0644"
+    content: |
+      # HTTPS certificate is obtained and renewed automatically (Let's Encrypt).
+      __SITE_HOST__ {
+        encode zstd gzip
+        # The shared-browser endpoint is for agents inside the container only.
+        @internal path /internal/*
+        respond @internal 404
+        reverse_proxy finder:8000 {
+          flush_interval -1          # stream agent answers (SSE) without buffering
+        }
+      }
+
+  - path: /opt/finder/update.sh
+    permissions: "0755"
+    content: |
+      #!/bin/bash
+      # Unpack the uploaded sources (if any), rebuild the image and (re)start the stack.
+      set -euo pipefail
+      cd /opt/finder
+      if [ -f src.tgz ]; then
+        rm -rf src.new && mkdir src.new && tar -xzf src.tgz -C src.new
+        rm -rf src && mv src.new src && rm -f src.tgz
+      fi
+      docker compose build finder
+      docker compose up -d --remove-orphans
+      docker image prune -f >/dev/null
+      docker compose ps
+
+  - path: /opt/finder/backup.sh
+    permissions: "0755"
+    content: |
+      #!/bin/bash
+      # Snapshot of all state (users DB, Hermes profiles with tokens) into /opt/finder/backups.
+      set -euo pipefail
+      mkdir -p /opt/finder/backups
+      docker run --rm -v finder_finder-data:/data:ro -v /opt/finder/backups:/out alpine:3.20 \
+        tar czf "/out/finder-data-$(date +%Y%m%d-%H%M%S).tar.gz" -C /data .
+      ls -1t /opt/finder/backups/*.tar.gz | tail -n +8 | xargs -r rm -f   # keep the 7 newest
+
+runcmd:
+  # Docker Engine + Compose plugin from Docker's apt repository
+  - install -m 0755 -d /etc/apt/keyrings
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  - chmod a+r /etc/apt/keyrings/docker.asc
+  - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable" > /etc/apt/sources.list.d/docker.list
+  - apt-get update
+  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+  # A 4 GB VM builds the image and runs Chrome: give it swap so a spike does not kill the build.
+  - fallocate -l 4G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+  - echo "/swapfile none swap sw 0 0" >> /etc/fstab
+  # Server secrets live only on this VM. deploy.ps1 adds optional settings (invite code, ...).
+  - |
+    if [ ! -f /opt/finder/.env ]; then
+      umask 077
+      echo "FINDER_SECRET_KEY=$(openssl rand -base64 48 | tr -d '\n')" > /opt/finder/.env
+    fi
+  # Daily backup at 03:30
+  - echo "30 3 * * * root /opt/finder/backup.sh >/var/log/finder-backup.log 2>&1" > /etc/cron.d/finder-backup
+  - touch /opt/finder/.cloud-init-done

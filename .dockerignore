@@ -1,0 +1,13 @@
+**/node_modules
+**/.venv
+**/__pycache__
+**/.pytest_cache
+frontend/dist
+backend/tests
+backend/.env
+data
+deploy
+hermes-plugins
+.claude
+.git
+*.log
