@@ -1,0 +1,56 @@
+# Mirrors the main branch to the Hugging Face Space after every push.
+# Needs the repository secret HF_TOKEN: a Hugging Face access token with Write access.
+name: Sync to Hugging Face Space
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: hf-sync
+  cancel-in-progress: true
+
+env:
+  HF_SPACE: Ramseer24/finder
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # A Space reads its settings from the YAML header of README.md. The header is added only
+      # to the copy that goes to Hugging Face; the README on GitHub stays as it is.
+      - name: Add the Space header to README
+        run: |
+          {
+            echo '---'
+            echo 'title: Finder'
+            echo 'emoji: 🔎'
+            echo 'colorFrom: green'
+            echo 'colorTo: blue'
+            echo 'sdk: docker'
+            echo 'app_port: 8000'
+            echo 'pinned: false'
+            echo '---'
+            echo
+            cat README.md
+          } > README.hf.md
+          mv README.hf.md README.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -qam "Add Hugging Face Space config"
+
+      - name: Push to Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "::error::Repository secret HF_TOKEN is not set (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+          owner="${HF_SPACE%%/*}"
+          git push --force "https://${owner}:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE}" HEAD:main
