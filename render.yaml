@@ -1,0 +1,25 @@
+# Render Blueprint: one Docker web service built from the Dockerfile.
+# Free plan limits: 512 MB RAM, no persistent disk, sleeps after 15 min without requests -
+# users, connected accounts and chats are lost on every restart, deploy or wake-up.
+services:
+  - type: web
+    name: finder
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: FINDER_SECRET_KEY
+        generateValue: true
+      - key: FINDER_COOKIE_SECURE
+        value: "true"
+      # Registration on the public site requires this code (set it in the dashboard).
+      - key: FINDER_INVITE_CODE
+        sync: false
+      # 512 MB is not enough for the shared headless Chrome; blocked sites fall back to the other methods.
+      - key: FINDER_BROWSER
+        value: "off"
+      # Stop an idle user's agent process sooner to keep memory free.
+      - key: FINDER_ACP_IDLE_SECONDS
+        value: "300"
